@@ -12,10 +12,18 @@ builder.Services.AddDbContext<HostingDbContext>(options =>
 // Add services to the container.
 
 builder.Services.AddControllers();
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 
 var app = builder.Build();
+
+// Inicializar los datos de la base de datos
+using (var scope = app.Services.CreateScope())
+{
+    var context = scope.ServiceProvider
+        .GetRequiredService<HostingDbContext>();
+
+    await DatabaseSeeder.InitializeAsync(context);
+}
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
