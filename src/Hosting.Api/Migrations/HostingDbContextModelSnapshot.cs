@@ -187,6 +187,49 @@ namespace Hosting.Api.Migrations
                     b.ToTable("eventos_servidores", (string)null);
                 });
 
+            modelBuilder.Entity("Hosting.Api.Entities.IdentidadExterna", b =>
+                {
+                    b.Property<Guid>("IdIdentidad")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id_identidad");
+
+                    b.Property<string>("CorreoProveedor")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)")
+                        .HasColumnName("correo_proveedor");
+
+                    b.Property<DateTime>("FechaVinculacion")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("fecha_vinculacion");
+
+                    b.Property<Guid>("IdUsuario")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id_usuario");
+
+                    b.Property<string>("IdUsuarioProveedor")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)")
+                        .HasColumnName("id_usuario_proveedor");
+
+                    b.Property<string>("Proveedor")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("proveedor");
+
+                    b.HasKey("IdIdentidad");
+
+                    b.HasIndex("IdUsuario");
+
+                    b.HasIndex("Proveedor", "IdUsuarioProveedor")
+                        .IsUnique()
+                        .HasDatabaseName("uq_identidades_externas_proveedor_usuario");
+
+                    b.ToTable("identidades_externas", (string)null);
+                });
+
             modelBuilder.Entity("Hosting.Api.Entities.Juego", b =>
                 {
                     b.Property<short>("IdJuego")
@@ -474,6 +517,17 @@ namespace Hosting.Api.Migrations
                         .HasForeignKey("IdUsuario");
 
                     b.Navigation("Servidor");
+
+                    b.Navigation("Usuario");
+                });
+
+            modelBuilder.Entity("Hosting.Api.Entities.IdentidadExterna", b =>
+                {
+                    b.HasOne("Hosting.Api.Entities.Usuario", "Usuario")
+                        .WithMany()
+                        .HasForeignKey("IdUsuario")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("Usuario");
                 });
