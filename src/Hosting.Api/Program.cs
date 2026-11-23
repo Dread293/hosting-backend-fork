@@ -19,6 +19,10 @@ builder.Services.AddSingleton<IDockerClient>(_ =>
 
 builder.Services.AddSingleton<DockerService>();
 
+builder.Services.AddScoped<ServidorService>();
+
+builder.Services.AddSingleton<ConfiguracionTerrariaService>();
+
 // Add services to the container.
 
 builder.Services.AddControllers();
