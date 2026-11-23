@@ -1,5 +1,7 @@
 using Hosting.Api.Data;
 using Microsoft.EntityFrameworkCore;
+using Docker.DotNet;
+using Hosting.Api.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -9,12 +11,44 @@ builder.Services.AddDbContext<HostingDbContext>(options =>
     )
 );
 
+builder.Services.AddSingleton<IDockerClient>(_ =>
+    new DockerClientConfiguration(
+        new Uri("unix:///var/run/docker.sock")
+    ).CreateClient()
+);
+
+builder.Services.AddSingleton<DockerService>();
+
 // Add services to the container.
 
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
 
 var app = builder.Build();
+
+// Comprobar conexión con Docker en desarrollo
+if (app.Environment.IsDevelopment())
+{
+    try
+    {
+        var dockerService = app.Services
+            .GetRequiredService<DockerService>();
+
+        var version = await dockerService.ObtenerVersionAsync();
+
+        app.Logger.LogInformation(
+            "Conexión con Docker Engine establecida. Versión: {Version}",
+            version.Version
+        );
+    }
+    catch (Exception ex)
+    {
+        app.Logger.LogError(
+            ex,
+            "No fue posible establecer conexión con Docker Engine."
+        );
+    }
+}
 
 // Inicializar los datos de la base de datos
 using (var scope = app.Services.CreateScope())

@@ -30,6 +30,8 @@ public class HostingDbContext : DbContext
 
     public DbSet<CopiaSeguridad> CopiasSeguridad { get; set; }
 
+    public DbSet<IdentidadExterna> IdentidadesExternas { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -414,6 +416,50 @@ public class HostingDbContext : DbContext
             entity.HasOne(c => c.Servidor)
                 .WithMany(s => s.CopiasSeguridad)
                 .HasForeignKey(c => c.IdServidor);
+        });
+
+        modelBuilder.Entity<IdentidadExterna>(entity =>
+        {
+            entity.ToTable("identidades_externas");
+
+            entity.HasKey(e => e.IdIdentidad);
+
+            entity.Property(e => e.IdIdentidad)
+                .HasColumnName("id_identidad");
+
+            entity.Property(e => e.IdUsuario)
+                .HasColumnName("id_usuario");
+
+            entity.Property(e => e.Proveedor)
+                .HasColumnName("proveedor")
+                .HasMaxLength(30)
+                .IsRequired();
+
+            entity.Property(e => e.IdUsuarioProveedor)
+                .HasColumnName("id_usuario_proveedor")
+                .HasMaxLength(255)
+                .IsRequired();
+
+            entity.Property(e => e.CorreoProveedor)
+                .HasColumnName("correo_proveedor")
+                .HasMaxLength(255);
+
+            entity.Property(e => e.FechaVinculacion)
+                .HasColumnName("fecha_vinculacion")
+                .HasColumnType("timestamp with time zone")
+                .IsRequired();
+
+            entity.HasIndex(e => new
+            {
+                e.Proveedor,
+                e.IdUsuarioProveedor
+            })
+            .IsUnique()
+            .HasDatabaseName("uq_identidades_externas_proveedor_usuario");
+
+            entity.HasOne(e => e.Usuario)
+                .WithMany()
+                .HasForeignKey(e => e.IdUsuario);
         });
     }
 }
