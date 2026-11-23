@@ -26,4 +26,92 @@ public class DockerService
             }
         );
     }
+
+    public async Task<string> CrearContenedorAsync(
+    Guid idServidor,
+    string nombreContenedor,
+    int puertoHost,
+    string rutaDatos,
+    string rutaConfiguracion)
+    {
+        var parametros = new CreateContainerParameters
+        {
+            Image = "terraria-hosting:1.4.5.8",
+
+            Name = nombreContenedor,
+
+            ExposedPorts = new Dictionary<string, EmptyStruct>
+            {
+                ["7777/tcp"] = new EmptyStruct()
+            },
+
+            Labels = new Dictionary<string, string>
+            {
+                ["hosting.managed"] = "true",
+                ["hosting.server_id"] = idServidor.ToString()
+            },
+
+            HostConfig = new HostConfig
+            {
+                PortBindings = new Dictionary<string, IList<PortBinding>>
+                {
+                    ["7777/tcp"] = new List<PortBinding>
+                {
+                    new PortBinding
+                    {
+                        HostPort = puertoHost.ToString()
+                    }
+                }
+                },
+
+                Binds = new List<string>
+            {
+                $"{rutaDatos}:/data",
+                $"{rutaConfiguracion}:/opt/terraria/serverconfig.txt:ro"
+            }
+            }
+        };
+
+        var resultado = await _dockerClient.Containers.CreateContainerAsync(
+            parametros
+        );
+
+        return resultado.ID;
+    }
+
+    public async Task<bool> IniciarContenedorAsync(string idContenedor)
+    {
+        return await _dockerClient.Containers.StartContainerAsync(
+            idContenedor,
+            new ContainerStartParameters()
+        );
+    }
+
+    public async Task DetenerContenedorAsync(string idContenedor)
+    {
+        await _dockerClient.Containers.StopContainerAsync(
+            idContenedor,
+            new ContainerStopParameters()
+        );
+    }
+
+    public async Task ReiniciarContenedorAsync(string idContenedor)
+    {
+        await _dockerClient.Containers.RestartContainerAsync(
+            idContenedor,
+            new ContainerRestartParameters()
+        );
+    }
+
+    public async Task EliminarContenedorAsync(string idContenedor)
+    {
+        await _dockerClient.Containers.RemoveContainerAsync(
+            idContenedor,
+            new ContainerRemoveParameters
+            {
+                Force = false,
+                RemoveVolumes = false
+            }
+        );
+    }
 }
